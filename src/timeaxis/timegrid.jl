@@ -1,9 +1,9 @@
 struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
-    o::T   # start
-    p::P   # period
-    n::Int # length, if n == 0, indicate it's endless
+    o::T    # start
+    p::P    # period
+    n::Int  # length, if n == 0, indicate it's endless
 
-    function TimeGrid{T,P,true}(o, p, n) where {T,P}  # the fininte one
+    function TimeGrid{T,P,:finite}(o, p, n) where {T,P}
         o′ = convert(T, o)
         n′ = convert(Int, n)
         p′ = convert(P, p)
@@ -12,7 +12,7 @@ struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
         new(o′, p′, n′)
     end
 
-    function TimeGrid{T,P,false}(o, p) where {T,P}  # the infinite one
+    function TimeGrid{T,P,:infinite}(o, p) where {T,P}
         o′ = convert(T, o)
         p′ = convert(P, p)
 
@@ -22,8 +22,8 @@ end
 
 # TODO: P should be a Dates.FixedPeriod?
 
-TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,false}(o, p)
-TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,true}(o, p, n)
+TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,:infinite}(o, p)
+TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,:finite}(o, p, n)
 
 # TODO: constructor from range
 
@@ -33,7 +33,7 @@ TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,true}(o, p, n)
 ###############################################################################
 
 @generated function Base.iterate(tg::TimeGrid, s = 1)
-    stop_expr = (!tg.parameters[3]) ? :() : :((s > tg.n) && return nothing)
+    stop_expr = (tg.parameters[3] ≡ :infinite) ? :() : :((s > tg.n) && return nothing)
 
     quote
         $stop_expr
@@ -41,11 +41,22 @@ TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,true}(o, p, n)
     end
 end
 
-Base.IteratorSize(::Type{TimeGrid{T,P,false}}) where {T,P} = Base.IsInfinite()
-Base.IteratorSize(::Type{TimeGrid{T,P,true}}) where {T,P}  = Base.HasLength()
+Base.IteratorSize(::Type{TimeGrid{T,P,:infinite}}) where {T,P} = Base.IsInfinite()
+Base.IteratorSize(::Type{TimeGrid{T,P,:finite}}) where {T,P}   = Base.HasLength()
 
 Base.IteratorEltype(::Type{<:TimeGrid}) = Base.HasEltype()
 Base.eltype(::Type{<:TimeGrid{T}}) where T = T
 
-Base.length(tg::TimeGrid{T,P,true}) where {T,P} = tg.n
-Base.size(tg::TimeGrid{T,P,true}) where{T,P}    = tg.n
+Base.length(tg::TimeGrid{T,P,:finite}) where {T,P} = tg.n
+Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
+
+
+###############################################################################
+#  Indexing
+###############################################################################
+
+Base.getindex(tg::TimeGrid{T,P,:infinite}, i::Integer) where {T,P} = tg.o + (i - 1) * tg.p
+function Base.getindex(tg::TimeGrid{T,P,:finite}, i::Integer) where {T,P}
+    @boundscheck 1 ≤ i ≤ tg.n
+
+end

@@ -9,7 +9,7 @@ using TimeSeries.TimeAxis
 
 
 @testset "iterator" begin
-    @testset "fininte iterator" begin
+    @testset "finite iterator" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 3)
         @test [i for i ∈ tg] == [
             DateTime(2021, 1, 1, 0,  0),
