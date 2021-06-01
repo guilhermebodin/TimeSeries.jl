@@ -58,9 +58,13 @@ checkbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} =
 checkbounds(tg::TimeGrid{T,P,:finite}, i::Real) where {T,P} =
     (!(1 ≤ i ≤ tg.n) && throw(BoundsError(tg, i)); nothing)
 
-# TODO: support i::Real
-function Base.getindex(tg::TimeGrid, i::Integer)
+function Base.getindex(tg::TimeGrid, i::Real)  # FIXME: is rounding acceptable?
     @boundscheck checkbounds(tg, i)
-    tg.o + (i - 1) * tg.p
+    ns = Nanosecond(round(Dates.value(Nanosecond(tg.p)) * (i - 1)))
+    tg.o + ns
 end
 
+function Base.getindex(tg::TimeGrid, i::Integer)
+    @boundscheck checkbounds(tg, i)
+    tg.o + tg.p * (i - 1)
+end
