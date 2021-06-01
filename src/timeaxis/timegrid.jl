@@ -21,6 +21,7 @@ struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
 end
 
 # TODO: P should be a Dates.FixedPeriod?
+# TODO: handle T is `Dates.Time` ?
 
 TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,:infinite}(o, p)
 TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,:finite}(o, p, n)
@@ -68,3 +69,23 @@ function Base.getindex(tg::TimeGrid, i::Integer)
     @boundscheck checkbounds(tg, i)
     tg.o + tg.p * (i - 1)
 end
+
+# TODO: isequal
+# TODO: T is `Dates.Time` ?
+for op in [:(==), :isequal]
+    @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T,P,:finite}) where {T,P}
+        x = convert(T, f.x)
+        (tg.o ≤ x ≤ tg[end]) || return nothing
+        Δ = Dates.value(Nanosecond(x - tg.o))
+        p = periodnano(tg)
+        iszero(Δ % p) || return nothing
+        Δ ÷ p + 1
+    end
+end
+
+
+###############################################################################
+#  Private utils
+###############################################################################
+
+periodnano(tg::TimeGrid) = Dates.value(Nanosecond(tg.p))
