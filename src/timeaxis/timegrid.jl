@@ -81,6 +81,8 @@ for op in [:(==), :isequal]
         iszero(Δ % p) || return nothing
         Δ ÷ p + 1
     end
+    @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T,P,:finite}) where {T,P} =
+        findfirst(f, tg)
 end
 
 
