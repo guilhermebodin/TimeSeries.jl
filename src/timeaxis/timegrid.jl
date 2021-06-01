@@ -8,7 +8,7 @@ struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
         n′ = convert(Int, n)
         p′ = convert(P, p)
 
-        (n′ < 0) && throw(DomainError(n′))
+        (n′ < 1) && throw(DomainError(n′))
         new(o′, p′, n′)
     end
 
