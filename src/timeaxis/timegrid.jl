@@ -32,12 +32,10 @@ TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,:finite}(o, p, n)
 #  Iterator interfaces
 ###############################################################################
 
-@generated function Base.iterate(tg::TimeGrid, s = 1)
-    stop_expr = (tg.parameters[3] ≡ :infinite) ? :() : :((s > tg.n) && return nothing)
-
+@generated function Base.iterate(tg::TimeGrid{T,P,L}, s = 1) where {T,P,L}
     quote
-        $stop_expr
-        (tg.o + (s - 1) * tg.p, s + 1)  # FIXME: different state design to reduce * operation?
+        $((L ≡ :infinite) ? :() : :((s > tg.n) && return nothing))
+        (tg[s], s + 1)  # FIXME: different state design to reduce * operation?
     end
 end
 
@@ -55,8 +53,14 @@ Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
 #  Indexing
 ###############################################################################
 
-Base.getindex(tg::TimeGrid{T,P,:infinite}, i::Integer) where {T,P} = tg.o + (i - 1) * tg.p
-function Base.getindex(tg::TimeGrid{T,P,:finite}, i::Integer) where {T,P}
-    @boundscheck 1 ≤ i ≤ tg.n
+checkbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} =
+    ((i < 1) && throw(BoundsError(tg, i)); nothing)
+checkbounds(tg::TimeGrid{T,P,:finite}, i::Real) where {T,P} =
+    (!(1 ≤ i ≤ tg.n) && throw(BoundsError(tg, i)); nothing)
 
+# TODO: support i::Real
+function Base.getindex(tg::TimeGrid, i::Integer)
+    @boundscheck checkbounds(tg, i)
+    tg.o + (i - 1) * tg.p
 end
+
