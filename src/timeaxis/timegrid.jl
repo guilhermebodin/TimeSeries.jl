@@ -22,7 +22,7 @@ end
 
 # TODO: P should be a Dates.FixedPeriod?
 # TODO: handle T is `Dates.Time` ?
-
+# TODO: convert type `T` to indicate getindex output type, e.g. Date -> DateTime with Minute period
 TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,:infinite}(o, p)
 TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,:finite}(o, p, n)
 
@@ -54,10 +54,13 @@ Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
 #  Indexing
 ###############################################################################
 
-checkbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} =
-    ((i < 1) && throw(BoundsError(tg, i)); nothing)
-checkbounds(tg::TimeGrid{T,P,:finite}, i::Real) where {T,P} =
-    (!(1 ≤ i ≤ tg.n) && throw(BoundsError(tg, i)); nothing)
+isinbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} = (1 ≤ i)
+isinbounds(tg::TimeGrid{T,P,:finite},   i::Real) where {T,P} = (1 ≤ i ≤ tg.n)
+isinbounds(tg::TimeGrid{T,P,:infinite}, t::TimeType) where {T,P} = (tg.o ≤ t)
+isinbounds(tg::TimeGrid{T,P,:finite},   t::TimeType) where {T,P} = (tg.o ≤ t ≤ tg[end])
+
+checkbounds(tg::TimeGrid, i::Real) =
+    (isinbounds(tg, i) || throw(BoundsError(tg, i)); nothing)
 
 function Base.getindex(tg::TimeGrid, i::Real)  # FIXME: is rounding acceptable?
     @boundscheck checkbounds(tg, i)
@@ -73,17 +76,34 @@ end
 # TODO: isequal
 # TODO: T is `Dates.Time` ?
 for op in [:(==), :isequal]
-    @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T,P,:finite}) where {T,P}
+    @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T}) where T
         x = convert(T, f.x)
-        (tg.o ≤ x ≤ tg[end]) || return nothing
+        isinbounds(tg, x) || return nothing
         Δ = Dates.value(Nanosecond(x - tg.o))
         p = periodnano(tg)
         iszero(Δ % p) || return nothing
         Δ ÷ p + 1
     end
-    @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T,P,:finite}) where {T,P} =
-        findfirst(f, tg)
+
+    @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid) = findfirst(f, tg)
 end
+
+@generated function Base.findprev(
+    f::Union{Base.Fix2{typeof(≤)},Base.Fix2{typeof(<)}}, tg::TimeGrid{T}, i) where T
+
+    j = (f.parameters[1] ≡ typeof(<)) ? :(iszero(Δ % p)) : :(0)
+
+    quote
+        isinbounds(tg, i) || throw(BoundsError(tg, i))
+
+        x = convert(T, f.x)
+        isinbounds(tg, x) || return nothing
+        Δ = Dates.value(Nanosecond(x - tg.o))
+        p = periodnano(tg)
+        min(Δ ÷ p + 1 - $j, i)
+    end
+end
+
 
 
 ###############################################################################

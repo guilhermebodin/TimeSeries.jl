@@ -33,6 +33,9 @@ end  # @testset "iterator"
 @testset "getindex" begin
     @testset "finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @test tg[1]   == tg.o
+        @test tg[2]   == DateTime(2021, 1, 1, 0, 15)
+        @test tg[end] == tg.o + 9 * Minute(15)
         @test_throws BoundsError tg[0]
         @test_throws BoundsError tg[11]
         @test_throws BoundsError tg[-42]
@@ -40,11 +43,57 @@ end  # @testset "iterator"
 
     @testset "infinite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
-        @test tg[1] == DateTime(2021, 1, 1)
+        @test tg[1] == tg.o
+        @test tg[2] == DateTime(2021, 1, 1, 0, 15)
         @test_throws BoundsError tg[0]
         @test_throws BoundsError tg[-42]
     end
 end   # @testset "getindex"
+
+
+@testset "find*" begin
+    @testset "findprev finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  3) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  3) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  3) == 2
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  2) == 2
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  2) == 2
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  2) == 2
+
+        @test findprev(<(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
+        @test findprev(<(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 2
+        @test findprev(<(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+
+        @test_throws BoundsError findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+    end
+
+    @testset "findprev infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  3) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  3) == 3
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  3) == 2
+
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  2) == 2
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  2) == 2
+        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  2) == 2
+
+        @test findprev(<(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
+        @test findprev(<(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 2
+        @test findprev(<(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+    end
+end
 
 
 end  # @testset "TimeGrid"
