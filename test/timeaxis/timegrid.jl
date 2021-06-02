@@ -54,27 +54,44 @@ end   # @testset "getindex"
 @testset "find*" begin
     @testset "findprev finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(tg)
 
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+        # TODO: test cases for benchmarking against tg and vg
 
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  3) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  3) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  3) == 2
+        for f ∈ [≤, <, ≥, >]
+            @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 10) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 33)), vg, 10)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 30)), tg, 10) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 30)), vg, 10)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 29)), tg, 10) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 29)), vg, 10)
 
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  2) == 2
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  2) == 2
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  2) == 2
+            @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg,  3) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 33)), vg,  3)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 30)), tg,  3) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 30)), vg,  3)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 29)), tg,  3) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 29)), vg,  3)
 
-        @test findprev(<(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
-        @test findprev(<(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 2
-        @test findprev(<(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+            @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg,  2) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 33)), vg,  2)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 30)), tg,  2) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 30)), vg,  2)
+            @test findprev(f(DateTime(2021, 1, 1, 0, 29)), tg,  2) ==
+                  findprev(f(DateTime(2021, 1, 1, 0, 29)), vg,  2)
 
-        @test_throws BoundsError findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+            @test findprev(f(Date(2019, 1, 1)), tg,  2) ==
+                  findprev(f(Date(2019, 1, 1)), vg,  2)
+            @test findprev(f(Date(2019, 1, 1)), tg,  2) ==
+                  findprev(f(Date(2019, 1, 1)), vg,  2)
+            @test findprev(f(Date(2019, 1, 1)), tg,  2) ==
+                  findprev(f(Date(2019, 1, 1)), vg,  2)
+
+            @test_throws BoundsError findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+        end
     end
 
-    @testset "findprev infinite" begin
+    @testset "findprev, ≤, infinite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
 
         @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3

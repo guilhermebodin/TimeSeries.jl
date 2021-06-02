@@ -104,6 +104,11 @@ end
     end
 end
 
+function Base.findprev(f::Union{Base.Fix2{typeof(≥)},Base.Fix2{typeof(>)}}, tg::TimeGrid, i)
+    isinbounds(tg, i) || throw(BoundsError(tg, i))
+    ifelse(f(tg[i]), i, nothing)
+end
+
 
 
 ###############################################################################
