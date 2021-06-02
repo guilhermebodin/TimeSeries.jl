@@ -52,9 +52,7 @@ end   # @testset "getindex"
 
 
 @testset "find*" begin
-    @testset "findprev finite" begin
-        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
-        vg = collect(tg)
+    function test_findprev(tg::TimeGrid, vg)
 
         # TODO: test cases for benchmarking against tg and vg
 
@@ -87,28 +85,24 @@ end   # @testset "getindex"
             @test findprev(f(Date(2019, 1, 1)), tg,  2) ==
                   findprev(f(Date(2019, 1, 1)), vg,  2)
 
-            @test_throws BoundsError findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+            @test_throws BoundsError findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 0)
+            @test_throws BoundsError findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, -1)
+            if Base.haslength(tg)
+                @test_throws BoundsError findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+            end
         end
     end
 
-    @testset "findprev, ≤, infinite" begin
+    @testset "findprev finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(tg)
+        test_findprev(tg, vg)
+    end
+
+    @testset "findprev infinite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
-
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
-
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  3) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  3) == 3
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  3) == 2
-
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 33)), tg,  2) == 2
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 30)), tg,  2) == 2
-        @test findprev(≤(DateTime(2021, 1, 1, 0, 29)), tg,  2) == 2
-
-        @test findprev(<(DateTime(2021, 1, 1, 0, 33)), tg, 10) == 3
-        @test findprev(<(DateTime(2021, 1, 1, 0, 30)), tg, 10) == 2
-        @test findprev(<(DateTime(2021, 1, 1, 0, 29)), tg, 10) == 2
+        vg = collect(Iterators.take(tg, 10))
+        test_findprev(tg, vg)
     end
 end
 
