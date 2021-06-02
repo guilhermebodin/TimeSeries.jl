@@ -54,14 +54,6 @@ Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
 #  Indexing
 ###############################################################################
 
-isinbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} = (1 ≤ i)
-isinbounds(tg::TimeGrid{T,P,:finite},   i::Real) where {T,P} = (1 ≤ i ≤ tg.n)
-isinbounds(tg::TimeGrid{T,P,:infinite}, t::TimeType) where {T,P} = (tg.o ≤ t)
-isinbounds(tg::TimeGrid{T,P,:finite},   t::TimeType) where {T,P} = (tg.o ≤ t ≤ tg[end])
-
-checkbounds(tg::TimeGrid, i::Real) =
-    (isinbounds(tg, i) || throw(BoundsError(tg, i)); nothing)
-
 function Base.getindex(tg::TimeGrid, i::Real)  # FIXME: is rounding acceptable?
     @boundscheck checkbounds(tg, i)
     ns = Nanosecond(round(Dates.value(Nanosecond(tg.p)) * (i - 1)))
@@ -73,7 +65,10 @@ function Base.getindex(tg::TimeGrid, i::Integer)
     tg.o + tg.p * (i - 1)
 end
 
-# TODO: isequal
+const LessOrLessEq       = Union{Base.Fix2{typeof(≤)}, Base.Fix2{typeof(<)}}
+const GreaterOrGreaterEq = Union{Base.Fix2{typeof(≥)}, Base.Fix2{typeof(>)}}
+const EqOrIsEq           = Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}
+
 # TODO: T is `Dates.Time` ?
 for op in [:(==), :isequal]
     @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T}) where T
@@ -85,9 +80,8 @@ for op in [:(==), :isequal]
     @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid) = findfirst(f, tg)
 end
 
-function Base.findprev(
-    f::Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}, tg::TimeGrid{T}, i) where T
-    isinbounds(tg, i) || throw(BoundsError(tg, i))
+function Base.findprev(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
+    @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
 
     x = convert(T, f.x)
     isinbounds(tg, x) || return nothing
@@ -95,13 +89,12 @@ function Base.findprev(
     time2idx(tg, x)
 end
 
-@generated function Base.findprev(
-    f::Union{Base.Fix2{typeof(≤)},Base.Fix2{typeof(<)}}, tg::TimeGrid{T}, i) where T
+@generated function Base.findprev(f::LessOrLessEq, tg::TimeGrid{T}, i) where T
 
     j = (f.parameters[1] ≡ typeof(<)) ? :(iszero(Δ % p)) : :(0)
 
     quote
-        isinbounds(tg, i) || throw(BoundsError(tg, i))
+        @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
 
         x = convert(T, f.x)
         isinbounds(tg, x) || return nothing
@@ -111,8 +104,8 @@ end
     end
 end
 
-function Base.findprev(f::Union{Base.Fix2{typeof(≥)},Base.Fix2{typeof(>)}}, tg::TimeGrid, i)
-    isinbounds(tg, i) || throw(BoundsError(tg, i))
+function Base.findprev(f::GreaterOrGreaterEq, tg::TimeGrid, i)
+    @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
     ifelse(f(tg[i]), i, nothing)
 end
 
@@ -121,6 +114,14 @@ end
 ###############################################################################
 #  Private utils
 ###############################################################################
+
+isinbounds(tg::TimeGrid{T,P,:infinite}, i::Real) where {T,P} = (1 ≤ i)
+isinbounds(tg::TimeGrid{T,P,:finite},   i::Real) where {T,P} = (1 ≤ i ≤ tg.n)
+isinbounds(tg::TimeGrid{T,P,:infinite}, t::TimeType) where {T,P} = (tg.o ≤ t)
+isinbounds(tg::TimeGrid{T,P,:finite},   t::TimeType) where {T,P} = (tg.o ≤ t ≤ tg[end])
+
+checkbounds(tg::TimeGrid, i::Real) =
+    (isinbounds(tg, i) || throw(BoundsError(tg, i)); nothing)
 
 periodnano(t::Period)    = Dates.value(Nanosecond(t))
 periodnano(tg::TimeGrid) = periodnano(tg.p)
