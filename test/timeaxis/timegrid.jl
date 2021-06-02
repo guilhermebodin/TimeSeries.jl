@@ -56,7 +56,7 @@ end   # @testset "getindex"
 
     function test_findprev(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findprev with f -> $f"
+            @info "test_findprev :: f -> $f"
 
             @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 10) ==
                   findprev(f(DateTime(2021, 1, 1, 0, 33)), vg, 10)
@@ -64,6 +64,10 @@ end   # @testset "getindex"
                   findprev(f(DateTime(2021, 1, 1, 0, 30)), vg, 10)
             @test findprev(f(DateTime(2021, 1, 1, 0, 29)), tg, 10) ==
                   findprev(f(DateTime(2021, 1, 1, 0, 29)), vg, 10)
+            @test findprev(f(DateTime(2021, 1, 1)),        tg, 10) ==
+                  findprev(f(DateTime(2021, 1, 1)),        vg, 10)
+            @test findprev(f(DateTime(2021, 1, 1, 2, 15)), tg, 10) ==
+                  findprev(f(DateTime(2021, 1, 1, 2, 15)), vg, 10)
 
             @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg,  3) ==
                   findprev(f(DateTime(2021, 1, 1, 0, 33)), vg,  3)

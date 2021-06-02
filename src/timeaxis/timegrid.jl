@@ -90,14 +90,15 @@ function Base.findprev(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
 end
 
 @generated function Base.findprev(f::LessOrLessEq, tg::TimeGrid{T}, i) where T
-
-    j = (f.parameters[1] ≡ typeof(<)) ? :(iszero(Δ % p)) : :(0)
+    func = f.parameters[1]
+    cond = (func ≡ typeof(<)) ? :((x ≤ tg.o)) : :((x < tg.o))
+    j = (func ≡ typeof(<)) ? :(iszero(Δ % p)) : :(0)
 
     quote
         @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
 
         x = convert(T, f.x)
-        isinbounds(tg, x) || return nothing
+        $cond && return nothing
         Δ = periodnano(x - tg.o)
         p = periodnano(tg)
         min(Δ ÷ p + 1 - $j, i)
