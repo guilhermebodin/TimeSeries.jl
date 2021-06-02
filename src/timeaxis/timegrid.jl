@@ -79,13 +79,20 @@ for op in [:(==), :isequal]
     @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T}) where T
         x = convert(T, f.x)
         isinbounds(tg, x) || return nothing
-        Δ = Dates.value(Nanosecond(x - tg.o))
-        p = periodnano(tg)
-        iszero(Δ % p) || return nothing
-        Δ ÷ p + 1
+        time2idx(tg, x)
     end
 
     @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid) = findfirst(f, tg)
+end
+
+function Base.findprev(
+    f::Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}, tg::TimeGrid{T}, i) where T
+    isinbounds(tg, i) || throw(BoundsError(tg, i))
+
+    x = convert(T, f.x)
+    isinbounds(tg, x) || return nothing
+    (x ≤ tg[i]) || return nothing
+    time2idx(tg, x)
 end
 
 @generated function Base.findprev(
@@ -98,7 +105,7 @@ end
 
         x = convert(T, f.x)
         isinbounds(tg, x) || return nothing
-        Δ = Dates.value(Nanosecond(x - tg.o))
+        Δ = periodnano(x - tg.o)
         p = periodnano(tg)
         min(Δ ÷ p + 1 - $j, i)
     end
@@ -115,4 +122,12 @@ end
 #  Private utils
 ###############################################################################
 
-periodnano(tg::TimeGrid) = Dates.value(Nanosecond(tg.p))
+periodnano(t::Period)    = Dates.value(Nanosecond(t))
+periodnano(tg::TimeGrid) = periodnano(tg.p)
+
+function time2idx(tg::TimeGrid, t)
+    Δ = periodnano(t - tg.o)
+    p = periodnano(tg)
+    iszero(Δ % p) || return nothing
+    Δ ÷ p + 1
+end
