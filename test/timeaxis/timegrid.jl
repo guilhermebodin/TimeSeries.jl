@@ -56,7 +56,7 @@ end   # @testset "getindex"
 
     function test_findprev(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findprev :: f -> $f"
+            @info "test_findprev :: $(typeof(tg)) :: f -> $f"
 
             @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 10) ==
                   findprev(f(DateTime(2021, 1, 1, 0, 33)), vg, 10)
@@ -110,9 +110,65 @@ end   # @testset "getindex"
         test_findprev(tg, vg)
     end
 
+    function test_findnext(tg::TimeGrid, vg)
+        for f ∈ [≤, <, ≥, >, ==, isequal]
+            @info "test_findnext :: $(typeof(tg)) :: f -> $f"
+
+            @test findnext(f(DateTime(2021, 1, 1, 0, 33)), tg,  1) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 33)), vg,  1)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 30)), tg,  1) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 30)), vg,  1)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 29)), tg,  1) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 29)), vg,  1)
+            @test findnext(f(DateTime(2021, 1, 1)),        tg,  1) ==
+                  findnext(f(DateTime(2021, 1, 1)),        vg,  1)
+            @test findnext(f(DateTime(2021, 1, 1, 2, 15)), tg,  1) ==
+                  findnext(f(DateTime(2021, 1, 1, 2, 15)), vg,  1)
+
+            @test findnext(f(DateTime(2021, 1, 1, 0, 33)), tg,  3) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 33)), vg,  3)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 30)), tg,  3) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 30)), vg,  3)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 29)), tg,  3) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 29)), vg,  3)
+
+            @test findnext(f(DateTime(2021, 1, 1, 0, 33)), tg,  2) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 33)), vg,  2)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 30)), tg,  2) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 30)), vg,  2)
+            @test findnext(f(DateTime(2021, 1, 1, 0, 29)), tg,  2) ==
+                  findnext(f(DateTime(2021, 1, 1, 0, 29)), vg,  2)
+
+            @test findnext(f(Date(2019, 1, 1)), tg,  2) ==
+                  findnext(f(Date(2019, 1, 1)), vg,  2)
+            @test findnext(f(Date(2019, 1, 1)), tg,  2) ==
+                  findnext(f(Date(2019, 1, 1)), vg,  2)
+            @test findnext(f(Date(2019, 1, 1)), tg,  2) ==
+                  findnext(f(Date(2019, 1, 1)), vg,  2)
+
+            @test_throws BoundsError findnext(f(DateTime(2021, 1, 1, 0, 33)), tg, 0)
+            @test_throws BoundsError findnext(f(DateTime(2021, 1, 1, 0, 33)), tg, -1)
+            if Base.haslength(tg)
+                @test_throws BoundsError findnext(f(DateTime(2021, 1, 1, 0, 33)), tg, 42)
+            end
+        end
+    end
+
+    @testset "findnext finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(tg)
+        test_findnext(tg, vg)
+    end
+
+    @testset "findnext infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        vg = collect(Iterators.take(tg, 20))
+        test_findnext(tg, vg)
+    end
+
     function test_findfirst(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findfirst :: f -> $f"
+            @info "test_findfirst :: $(typeof(tg)) :: f -> $f"
 
             @test findfirst(f(DateTime(2021, 1, 1, 0, 33)), tg) ==
                   findfirst(f(DateTime(2021, 1, 1, 0, 33)), vg)

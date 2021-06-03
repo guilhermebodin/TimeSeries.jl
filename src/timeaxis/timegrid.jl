@@ -69,35 +69,39 @@ const LessOrLessEq       = Union{Base.Fix2{typeof(≤)}, Base.Fix2{typeof(<)}}
 const GreaterOrGreaterEq = Union{Base.Fix2{typeof(≥)}, Base.Fix2{typeof(>)}}
 const EqOrIsEq           = Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}
 
-# TODO: T is `Dates.Time` ?
-for op in [:(==), :isequal]
-    @eval function Base.findfirst(f::Base.Fix2{typeof($op)}, tg::TimeGrid{T}) where T
-        x = convert(T, f.x)
-        isinbounds(tg, x) || return nothing
-        time2idx(tg, x)
-    end
+Base.findfirst(f::Function, tg::TimeGrid) = findnext(f, tg, 1)
+Base.findlast(f::Function, tg::TimeGrid{T,P,:finit}) where {T,P} =
+    findprev(f, tg, lastindex(tg))
 
-    @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid) = findfirst(f, tg)
+function Base.findnext(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
+    @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
+    x = convert(T, f.x)
+    isinbounds(tg, x) || return nothing
+    (x < tg[i]) && return nothing
+    time2idx(tg, x)
 end
 
-Base.findfirst(f::LessOrLessEq, tg::TimeGrid) = ifelse(f(tg.o), 1, nothing)
+function Base.findnext(f::LessOrLessEq, tg::TimeGrid, i)
+    @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
+    ifelse(f(tg[i]), i, nothing)
+end
 
-@generated function Base.findfirst(f::GreaterOrGreaterEq, tg::TimeGrid{T}) where T
+@generated function Base.findnext(f::GreaterOrGreaterEq, tg::TimeGrid{T}, i) where T
     func = f.parameters[1]
     op = (func ≡ typeof(>)) ? :(≥) : :(>)
     boundary_cond = Base.haslength(tg) ? :($op(x,tg[end]) && return nothing) : :()
     j = (f.parameters[1] ≡ typeof(>)) ? :(1) : :(Int(!iszero(Δ % p)))
 
     quote
+        @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
         x = convert(T, f.x)
         $boundary_cond
-        f(tg.o) && return 1
-        Δ = periodnano(x - tg.o)
+        f(tg[i]) && return i
+        Δ = periodnano(x - tg[i])
         p = periodnano(tg)
-        Δ ÷ p + 1 + $j
+        Δ ÷ p + i + $j
     end
 end
-
 
 function Base.findprev(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
     @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
@@ -115,7 +119,6 @@ end
 
     quote
         @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
-
         x = convert(T, f.x)
         $cond && return nothing
         Δ = periodnano(x - tg.o)
