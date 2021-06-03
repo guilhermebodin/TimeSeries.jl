@@ -31,8 +31,10 @@ end  # @testset "iterator"
 
 
 @testset "getindex" begin
-    @testset "finite" begin
+    @testset "by index, finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @info "getindex(i, ::Int) :: $(typeof(tg))"
+
         @test tg[1]   == tg.o
         @test tg[2]   == DateTime(2021, 1, 1, 0, 15)
         @test tg[end] == tg.o + 9 * Minute(15)
@@ -41,12 +43,37 @@ end  # @testset "iterator"
         @test_throws BoundsError tg[-42]
     end
 
-    @testset "infinite" begin
+    @testset "by index, infinite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        @info "getindex(i, ::Int) :: $(typeof(tg))"
+
         @test tg[1] == tg.o
         @test tg[2] == DateTime(2021, 1, 1, 0, 15)
         @test_throws BoundsError tg[0]
         @test_throws BoundsError tg[-42]
+    end
+
+    @testset "by time, finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @info "getindex(i, ::TimeType) :: $(typeof(tg))"
+
+        @test tg[tg.o]    == 1
+        @test tg[tg[2]]   == 2
+        @test tg[tg[end]] == 10
+
+        @test_throws KeyError tg[DateTime(2019, 1, 1)]
+        @test_throws KeyError tg[DateTime(2022, 1, 1)]
+    end
+
+    @testset "by time, infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        @info "getindex(i, ::TimeType) :: $(typeof(tg))"
+
+        @test tg[tg.o]    == 1
+        @test tg[tg[2]]   == 2
+        @test tg[tg[42]]  == 42
+
+        @test_throws KeyError tg[DateTime(2019, 1, 1)]
     end
 end   # @testset "getindex"
 
@@ -56,7 +83,7 @@ end   # @testset "getindex"
 
     function test_findprev(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findprev :: $(typeof(tg)) :: f -> $f"
+            @info "findprev :: $(typeof(tg)) :: f -> $f"
 
             @test findprev(f(DateTime(2021, 1, 1, 0, 33)), tg, 10) ==
                   findprev(f(DateTime(2021, 1, 1, 0, 33)), vg, 10)
@@ -112,7 +139,7 @@ end   # @testset "getindex"
 
     function test_findnext(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findnext :: $(typeof(tg)) :: f -> $f"
+            @info "findnext :: $(typeof(tg)) :: f -> $f"
 
             @test findnext(f(DateTime(2021, 1, 1, 0, 33)), tg,  1) ==
                   findnext(f(DateTime(2021, 1, 1, 0, 33)), vg,  1)
@@ -168,7 +195,7 @@ end   # @testset "getindex"
 
     function test_findfirst(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findfirst :: $(typeof(tg)) :: f -> $f"
+            @info "findfirst :: $(typeof(tg)) :: f -> $f"
 
             @test findfirst(f(DateTime(2021, 1, 1, 0, 33)), tg) ==
                   findfirst(f(DateTime(2021, 1, 1, 0, 33)), vg)
@@ -199,7 +226,7 @@ end   # @testset "getindex"
 
     function test_findlast(tg::TimeGrid, vg)
         for f ∈ [≤, <, ≥, >, ==, isequal]
-            @info "test_findlast :: $(typeof(tg)) :: f -> $f"
+            @info "findlast :: $(typeof(tg)) :: f -> $f"
 
             if !Base.haslength(tg) && f ∈ [≥, >]
                 @test_throws DomainError findlast(f(DateTime(2021, 1, 1)), tg)

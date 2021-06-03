@@ -65,6 +65,12 @@ function Base.getindex(tg::TimeGrid, i::Integer)
     tg.o + tg.p * (i - 1)
 end
 
+function Base.getindex(tg::TimeGrid, t::TimeType)
+    @boundscheck checkbounds(tg, t)
+    i = time2idx(tg, t)
+    isnothing(i) ? (throw(KeyError(t))) : i
+end
+
 const LessOrLessEq       = Union{Base.Fix2{typeof(≤)}, Base.Fix2{typeof(<)}}
 const GreaterOrGreaterEq = Union{Base.Fix2{typeof(≥)}, Base.Fix2{typeof(>)}}
 const EqOrIsEq           = Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}
@@ -152,6 +158,8 @@ isinbounds(tg::TimeGrid{T,P,:finite},   t::TimeType) where {T,P} = (tg.o ≤ t �
 
 checkbounds(tg::TimeGrid, i::Real) =
     (isinbounds(tg, i) || throw(BoundsError(tg, i)); nothing)
+checkbounds(tg::TimeGrid, i::TimeType) =
+    (isinbounds(tg, i) || throw(KeyError(i)); nothing)
 
 periodnano(t::Period)    = Dates.value(Nanosecond(t))
 periodnano(tg::TimeGrid) = periodnano(tg.p)
