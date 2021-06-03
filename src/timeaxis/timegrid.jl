@@ -80,6 +80,25 @@ for op in [:(==), :isequal]
     @eval Base.findlast(f::Base.Fix2{typeof($op)}, tg::TimeGrid) = findfirst(f, tg)
 end
 
+Base.findfirst(f::LessOrLessEq, tg::TimeGrid) = ifelse(f(tg.o), 1, nothing)
+
+@generated function Base.findfirst(f::GreaterOrGreaterEq, tg::TimeGrid{T}) where T
+    func = f.parameters[1]
+    op = (func ≡ typeof(>)) ? :(≥) : :(>)
+    boundary_cond = Base.haslength(tg) ? :($op(x,tg[end]) && return nothing) : :()
+    j = (f.parameters[1] ≡ typeof(>)) ? :(1) : :(Int(!iszero(Δ % p)))
+
+    quote
+        x = convert(T, f.x)
+        $boundary_cond
+        f(tg.o) && return 1
+        Δ = periodnano(x - tg.o)
+        p = periodnano(tg)
+        Δ ÷ p + 1 + $j
+    end
+end
+
+
 function Base.findprev(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
     @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
 

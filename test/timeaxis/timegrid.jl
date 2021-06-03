@@ -109,6 +109,37 @@ end   # @testset "getindex"
         vg = collect(Iterators.take(tg, 10))
         test_findprev(tg, vg)
     end
+
+    function test_findfirst(tg::TimeGrid, vg)
+        for f ∈ [≤, <, ≥, >, ==, isequal]
+            @info "test_findfirst :: f -> $f"
+
+            @test findfirst(f(DateTime(2021, 1, 1, 0, 33)), tg) ==
+                  findfirst(f(DateTime(2021, 1, 1, 0, 33)), vg)
+            @test findfirst(f(DateTime(2021, 1, 1, 0, 30)), tg) ==
+                  findfirst(f(DateTime(2021, 1, 1, 0, 30)), vg)
+            @test findfirst(f(DateTime(2021, 1, 1, 0, 29)), tg) ==
+                  findfirst(f(DateTime(2021, 1, 1, 0, 29)), vg)
+            @test findfirst(f(DateTime(2021, 1, 1)),        tg) ==
+                  findfirst(f(DateTime(2021, 1, 1)),        vg)
+            @test findfirst(f(DateTime(2021, 1, 1, 2, 15)), tg) ==
+                  findfirst(f(DateTime(2021, 1, 1, 2, 15)), vg)
+            @test findfirst(f(Date(2019, 1, 1)), tg) ==
+                  findfirst(f(Date(2019, 1, 1)), vg)
+        end
+    end
+
+    @testset "findfirst finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(tg)
+        test_findfirst(tg, vg)
+    end
+
+    @testset "findfirst infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        vg = collect(Iterators.take(tg, 20))
+        test_findfirst(tg, vg)
+    end
 end
 
 
