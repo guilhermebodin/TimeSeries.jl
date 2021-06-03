@@ -70,8 +70,15 @@ const GreaterOrGreaterEq = Union{Base.Fix2{typeof(≥)}, Base.Fix2{typeof(>)}}
 const EqOrIsEq           = Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)}}
 
 Base.findfirst(f::Function, tg::TimeGrid) = findnext(f, tg, 1)
+
 Base.findlast(f::Function, tg::TimeGrid{T,P,:finit}) where {T,P} =
     findprev(f, tg, lastindex(tg))
+Base.findlast(f::EqOrIsEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
+    findnext(f, tg, 1)
+Base.findlast(f::LessOrLessEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
+    findprev(f, tg, typemax(Int))
+Base.findlast(f::GreaterOrGreaterEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
+    throw(DomainError("infinite iterator. Please use `findprev` instead"))
 
 function Base.findnext(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
     @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))

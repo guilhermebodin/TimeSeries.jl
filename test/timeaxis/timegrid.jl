@@ -196,6 +196,42 @@ end   # @testset "getindex"
         vg = collect(Iterators.take(tg, 20))
         test_findfirst(tg, vg)
     end
+
+    function test_findlast(tg::TimeGrid, vg)
+        for f ∈ [≤, <, ≥, >, ==, isequal]
+            @info "test_findlast :: $(typeof(tg)) :: f -> $f"
+
+            if !Base.haslength(tg) && f ∈ [≥, >]
+                @test_throws DomainError findlast(f(DateTime(2021, 1, 1)), tg)
+                continue
+            end
+
+            @test findlast(f(DateTime(2021, 1, 1, 0, 33)), tg) ==
+                  findlast(f(DateTime(2021, 1, 1, 0, 33)), vg)
+            @test findlast(f(DateTime(2021, 1, 1, 0, 30)), tg) ==
+                  findlast(f(DateTime(2021, 1, 1, 0, 30)), vg)
+            @test findlast(f(DateTime(2021, 1, 1, 0, 29)), tg) ==
+                  findlast(f(DateTime(2021, 1, 1, 0, 29)), vg)
+            @test findlast(f(DateTime(2021, 1, 1)),        tg) ==
+                  findlast(f(DateTime(2021, 1, 1)),        vg)
+            @test findlast(f(DateTime(2021, 1, 1, 2, 15)), tg) ==
+                  findlast(f(DateTime(2021, 1, 1, 2, 15)), vg)
+            @test findlast(f(Date(2019, 1, 1)), tg) ==
+                  findlast(f(Date(2019, 1, 1)), vg)
+        end
+    end
+
+    @testset "findlast finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(tg)
+        test_findlast(tg, vg)
+    end
+
+    @testset "findlast infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        vg = collect(Iterators.take(tg, 20))
+        test_findlast(tg, vg)
+    end
 end
 
 
