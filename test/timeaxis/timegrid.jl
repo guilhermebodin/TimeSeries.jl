@@ -284,4 +284,22 @@ end  # @testset "find*"
 end  # @testset "count"
 
 
+@testset "reduce" begin
+    @testset "finit" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @info "reduce :: $(typeof(tg))"
+
+        @test reduce(max, tg) == tg[end]
+        @test reduce(max, tg, init = DateTime(2077, 1, 1)) == DateTime(2077, 1, 1)
+    end
+
+    @testset "infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        @info "reduce :: $(typeof(tg))"
+
+        @test_throws BoundsError reduce(max, tg)
+    end
+end
+
+
 end  # @testset "TimeGrid"
