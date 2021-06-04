@@ -91,6 +91,24 @@ Base.findlast(f::LessOrLessEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
 Base.findlast(f::GreaterOrGreaterEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
     throw(DomainError("infinite iterator. Please use `findprev` instead"))
 
+function Base.findall(f::EqOrIsEq, tg::TimeGrid)
+    x = findfirst(f, tg)
+    isnothing(x) && return Int[]
+    Int[x]
+end
+
+function Base.findall(f::LessOrLessEq, tg::TimeGrid)
+    x = findlast(f, tg)
+    isnothing(x) && return Int[]
+    1:x
+end
+
+function Base.findall(f::GreaterOrGreaterEq, tg::TimeGrid)
+    x = findfirst(f, tg)
+    isnothing(x) && return Int[]
+    x:lastindex(tg)
+end
+
 function Base.findnext(f::EqOrIsEq, tg::TimeGrid{T}, i) where T
     @boundscheck isinbounds(tg, i) || throw(BoundsError(tg, i))
     x = convert(T, f.x)

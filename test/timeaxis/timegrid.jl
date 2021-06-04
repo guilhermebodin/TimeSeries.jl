@@ -260,6 +260,42 @@ end   # @testset "getindex"
         vg = collect(Iterators.take(tg, 20))
         test_findlast(tg, vg)
     end
+
+    function test_findall(tg, vg)
+        for f ∈ [≤, <, ≥, >, ==, isequal]
+            @info "findall :: $(typeof(tg)) :: f -> $f"
+
+            if !Base.haslength(tg) && f ∈ [≥, >]
+                @test_throws DomainError findlast(f(DateTime(2021, 1, 1)), tg)
+                continue
+            end
+
+            @test findall(f(DateTime(2021, 1, 1, 0, 33)), tg) ==
+                  findall(f(DateTime(2021, 1, 1, 0, 33)), vg)
+            @test findall(f(DateTime(2021, 1, 1, 0, 30)), tg) ==
+                  findall(f(DateTime(2021, 1, 1, 0, 30)), vg)
+            @test findall(f(DateTime(2021, 1, 1, 0, 29)), tg) ==
+                  findall(f(DateTime(2021, 1, 1, 0, 29)), vg)
+            @test findall(f(DateTime(2021, 1, 1)),        tg) ==
+                  findall(f(DateTime(2021, 1, 1)),        vg)
+            @test findall(f(DateTime(2021, 1, 1, 2, 15)), tg) ==
+                  findall(f(DateTime(2021, 1, 1, 2, 15)), vg)
+            @test findall(f(Date(2019, 1, 1)), tg) ==
+                  findall(f(Date(2019, 1, 1)), vg)
+        end
+    end
+
+    @testset "findall finite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        vg = collect(Iterators.take(tg, 20))
+        test_findall(tg, vg)
+    end
+
+    @testset "findall infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        vg = collect(Iterators.take(tg, 20))
+        test_findall(tg, vg)
+    end
 end  # @testset "find*"
 
 
@@ -272,7 +308,7 @@ end  # @testset "find*"
         @test count(DateTime(2020, 1, 1)..DateTime(2021, 1, 1, 2, 15), tg) == 10
     end
 
-    @testset "finit" begin
+    @testset "finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
         test_count(tg)
     end
@@ -285,7 +321,7 @@ end  # @testset "count"
 
 
 @testset "reduce" begin
-    @testset "finit" begin
+    @testset "finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
         @info "reduce :: $(typeof(tg))"
 
@@ -303,7 +339,7 @@ end
 
 
 @testset "foldl" begin
-    @testset "finit" begin
+    @testset "finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
         @info "foldl :: $(typeof(tg))"
 
@@ -321,7 +357,7 @@ end
 
 
 @testset "foldr" begin
-    @testset "finit" begin
+    @testset "finite" begin
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
         @info "foldr :: $(typeof(tg))"
 
