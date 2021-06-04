@@ -13,7 +13,7 @@ tests = [
     "basemisc",
     "tables",
     "plotrecipes",
-    "timeaxis/timegrod",
+    "timeaxis/timegrid",
 ]
 
 
