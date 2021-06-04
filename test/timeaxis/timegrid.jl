@@ -302,4 +302,40 @@ end  # @testset "count"
 end
 
 
+@testset "foldl" begin
+    @testset "finit" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @info "foldl :: $(typeof(tg))"
+
+        @test foldl(max, tg) == tg[end]
+        @test foldl(max, tg, init = DateTime(2077, 1, 1)) == DateTime(2077, 1, 1)
+    end
+
+    @testset "infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        @info "foldl :: $(typeof(tg))"
+
+        @test_throws BoundsError foldl(max, tg)
+    end
+end
+
+
+@testset "foldr" begin
+    @testset "finit" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        @info "foldr :: $(typeof(tg))"
+
+        @test foldr(max, tg) == tg[end]
+        @test foldr(max, tg, init = DateTime(2077, 1, 1)) == DateTime(2077, 1, 1)
+    end
+
+    @testset "infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        @info "foldr :: $(typeof(tg))"
+
+        @test_throws MethodError foldr(max, tg)
+    end
+end
+
+
 end  # @testset "TimeGrid"
