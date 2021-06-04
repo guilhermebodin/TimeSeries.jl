@@ -182,6 +182,9 @@ Base.:-(tg::TimeGrid, p::Period) = TimeGrid(tg, o = tg.o - p)
 Base.view(tg::TimeGrid, r::OrdinalRange{Int,Int}) =
     TimeGrid(tg[first(r)], tg.p * step(r), length(r))
 
+Base.view(tg::TimeGrid, i::ClosedInterval{Int}) =
+    TimeGrid(tg[leftendpoint(i)], tg.p, length(i))
+
 
 ###############################################################################
 #  Reduction

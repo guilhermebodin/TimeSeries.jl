@@ -343,8 +343,11 @@ end
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
         @info "view :: $(typeof(tg))"
 
-        @test view(tg, 2:9)[1]   == DateTime(2021, 1, 1, 0, 15)
-        @test view(tg, 2:2:10).p == Minute(30)
+        @test view(tg, 2:9)[1]    == DateTime(2021, 1, 1, 0, 15)
+        @test view(tg, 2:9)[end]  == DateTime(2021, 1, 1, 2, 0)
+        @test view(tg, 2..9)[1]   == DateTime(2021, 1, 1, 0, 15)
+        @test view(tg, 2..9)[end] == DateTime(2021, 1, 1, 2, 0)
+        @test view(tg, 2:2:10).p  == Minute(30)
     end
 
     @testset "infinite" begin
@@ -353,6 +356,8 @@ end
 
         @test view(tg, 2:9)[1]    == DateTime(2021, 1, 1, 0, 15)
         @test view(tg, 2:9)[end]  == DateTime(2021, 1, 1, 2, 0)
+        @test view(tg, 2..9)[1]   == DateTime(2021, 1, 1, 0, 15)
+        @test view(tg, 2..9)[end] == DateTime(2021, 1, 1, 2, 0)
         @test view(tg, 2:2:10).p  == Minute(30)
     end
 end
