@@ -82,7 +82,7 @@ const EqOrIsEq           = Union{Base.Fix2{typeof(==)},Base.Fix2{typeof(isequal)
 
 Base.findfirst(f::Function, tg::TimeGrid) = findnext(f, tg, 1)
 
-Base.findlast(f::Function, tg::TimeGrid{T,P,:finit}) where {T,P} =
+Base.findlast(f::Function, tg::TimeGrid{T,P,:finite}) where {T,P} =
     findprev(f, tg, lastindex(tg))
 Base.findlast(f::EqOrIsEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
     findnext(f, tg, 1)
@@ -223,6 +223,22 @@ end
 
 resample(tg::TimeGrid, i::Real) = TimeGrid(tg, p = Nanosecond(tg.p) * i)
 resample(tg::TimeGrid, p::Period) = TimeGrid(tg, p = p)
+
+
+###############################################################################
+#  Searching between two point processes
+###############################################################################
+
+function Base.findall(tg::TimeGrid{T,P,:finite}, tg′::TimeGrid) where {T,P}
+    # FIXME: this is a naive implementation
+    A = Vector{Union{Int,Missing}}(undef, tg.n)
+    @simd for i ∈ 1:tg.n
+        t = tg[i]
+        j = findfirst(==(t), tg′)
+        A[i] = ifelse(isnothing(j), missing, j)
+    end
+    A
+end
 
 
 ###############################################################################

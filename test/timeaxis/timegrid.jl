@@ -296,6 +296,18 @@ end   # @testset "getindex"
         vg = collect(Iterators.take(tg, 20))
         test_findall(tg, vg)
     end
+
+    @testset "findall with two timegrids" begin
+        tg  = TimeGrid(DateTime(2021, 1, 1),        Minute(15), 10)
+        tg′ = TimeGrid(DateTime(2021, 1, 1, 0, 33), Minute(12))
+        @info "findall(::$(typeof(tg)), ::$(typeof(tg′)))"
+
+        A = findall(tg, tg′)
+        @test length(A) == 10
+
+        B = [missing, missing, missing, 2, missing, missing, missing, 7, missing, missing]
+        @test isequal(A, B)
+    end
 end  # @testset "find*"
 
 
