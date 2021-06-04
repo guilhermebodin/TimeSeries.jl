@@ -1,6 +1,7 @@
 module TimeAxis
 
 using Dates
+using IntervalSets
 
 ###############################################################################
 #  export

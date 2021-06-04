@@ -1,5 +1,6 @@
 using Base.Iterators
 using Dates
+using IntervalSets
 using Test
 
 using TimeSeries.TimeAxis
@@ -259,7 +260,28 @@ end   # @testset "getindex"
         vg = collect(Iterators.take(tg, 20))
         test_findlast(tg, vg)
     end
-end
+end  # @testset "find*"
+
+
+@testset "count" begin
+    function test_count(tg::TimeGrid)
+        @info "count :: $(typeof(tg))"
+
+        @test count(DateTime(2020, 1, 1)..DateTime(2020, 2, 1), tg) == 0
+        @test count(DateTime(2020, 1, 1)..DateTime(2021, 1, 1), tg) == 1
+        @test count(DateTime(2020, 1, 1)..DateTime(2021, 1, 1, 2, 15), tg) == 10
+    end
+
+    @testset "finit" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15), 10)
+        test_count(tg)
+    end
+
+    @testset "infinite" begin
+        tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
+        test_count(tg)
+    end
+end  # @testset "count"
 
 
 end  # @testset "TimeGrid"

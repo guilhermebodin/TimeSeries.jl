@@ -151,6 +151,7 @@ function Base.findprev(f::GreaterOrGreaterEq, tg::TimeGrid, i)
 end
 
 # TODO: find function with NSS
+# TODO: support find*(in(::Interval), tg)
 
 
 ###############################################################################
@@ -172,6 +173,19 @@ Base.:+(tg::TimeGrid, i::Real)   = TimeGrid(tg, o = tg.o + Nanosecond(tg.p))
 Base.:-(tg::TimeGrid, i::Real)   = TimeGrid(tg, o = tg.o - Nanosecond(tg.p))
 Base.:+(tg::TimeGrid, p::Period) = TimeGrid(tg, o = tg.o + p)
 Base.:-(tg::TimeGrid, p::Period) = TimeGrid(tg, o = tg.o - p)
+
+
+###############################################################################
+#  Reduction
+###############################################################################
+
+function Base.count(i::Interval{:closed,:closed}, tg::TimeGrid)
+    x = findfirst(≥(leftendpoint(i)), tg)
+    isnothing(x) && return 0
+    y = findlast(≤(rightendpoint(i)), tg)
+    isnothing(y) && return 0
+    abs(y - x) + 1
+end
 
 
 ###############################################################################
