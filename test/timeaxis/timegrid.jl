@@ -300,7 +300,7 @@ end   # @testset "getindex"
     @testset "findall with two timegrids" begin
         tg  = TimeGrid(DateTime(2021, 1, 1),        Minute(15), 10)
         tg′ = TimeGrid(DateTime(2021, 1, 1, 0, 33), Minute(12))
-        @info "findall(::$(typeof(tg)), ::$(typeof(tg′)))"
+        @info "findall :: $(typeof(tg)) :: $(typeof(tg′)))"
 
         A = findall(tg, tg′)
         @test length(A) == 10
