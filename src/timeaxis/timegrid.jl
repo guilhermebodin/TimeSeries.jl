@@ -1,4 +1,8 @@
-struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
+###############################################################################
+#  Type
+###############################################################################
+
+mutable struct TimeGrid{T,P,L} <: AbstractTimeAxis{T}
     o::T    # start
     p::P    # period
     n::Int  # length, if n == 0, indicate it's endless
@@ -168,7 +172,7 @@ function Base.findprev(f::GreaterOrGreaterEq, tg::TimeGrid, i)
     ifelse(f(tg[i]), i, nothing)
 end
 
-# TODO: find function with NSS
+# TODO: find function with NNS
 # TODO: support find*(in(::Interval), tg)
 
 
@@ -240,11 +244,14 @@ function Base.findall(tg::TimeGrid{T,P,:finite}, tg′::TimeGrid) where {T,P}
     A
 end
 
+#TODO: NNS
+
 
 ###############################################################################
 #  Common vector operations
 ###############################################################################
 
+Base.resize!(tg::TimeGrid{T,P,:finite}, n::Int) where {T,P} = (tg.n = n; tg)
 #TODO: diff
 
 ###############################################################################

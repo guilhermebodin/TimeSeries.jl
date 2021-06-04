@@ -16,6 +16,7 @@ export resample
 ###############################################################################
 
 include("./abstract.jl")
+include("./nns.jl")
 include("./timegrid.jl")
 
 end  # module TimeAxis
