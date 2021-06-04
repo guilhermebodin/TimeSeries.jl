@@ -23,8 +23,13 @@ end
 # TODO: P should be a Dates.FixedPeriod?
 # TODO: handle T is `Dates.Time` ?
 # TODO: convert type `T` to indicate getindex output type, e.g. Date -> DateTime with Minute period
-TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,:infinite}(o, p)
 TimeGrid(o::T, p::P, n::Integer) where {T,P} = TimeGrid{T,P,:finite}(o, p, n)
+TimeGrid(o::T, p::P) where {T,P}             = TimeGrid{T,P,:infinite}(o, p)
+
+TimeGrid(tg::TimeGrid{T,P,:infinite}; o = tg.o, p = tg.p) where {T,P} =
+    TimeGrid(o, p)
+TimeGrid(tg::TimeGrid{T,P,:finite}; o = tg.o, p = tg.p, n = tg.n) where {T,P} =
+    TimeGrid(o, p, n)
 
 # TODO: constructor from range
 
@@ -145,6 +150,28 @@ function Base.findprev(f::GreaterOrGreaterEq, tg::TimeGrid, i)
     ifelse(f(tg[i]), i, nothing)
 end
 
+# TODO: find function with NSS
+
+
+###############################################################################
+#  Relative Time
+###############################################################################
+
+Base.getindex(tg::TimeGrid, ::typeof(+), n::Int) =  Nanosecond(tg.p) * n
+Base.getindex(tg::TimeGrid, ::typeof(-), n::Int) = -Nanosecond(tg.p) * n
+
+# TODO: test cases
+function Base.getindex(tg::TimeGrid, ::typeof(+), p::Period)
+    p′ = periodnano(p)
+    q = periodnano(tg.p)
+    iszero(p′ % q) || throw(KeyError(p))
+    p′ ÷ q + 1
+end
+
+Base.:+(tg::TimeGrid, i::Real)   = TimeGrid(tg, o = tg.o + Nanosecond(tg.p))
+Base.:-(tg::TimeGrid, i::Real)   = TimeGrid(tg, o = tg.o - Nanosecond(tg.p))
+Base.:+(tg::TimeGrid, p::Period) = TimeGrid(tg, o = tg.o + p)
+Base.:-(tg::TimeGrid, p::Period) = TimeGrid(tg, o = tg.o - p)
 
 
 ###############################################################################
