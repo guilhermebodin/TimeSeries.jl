@@ -159,8 +159,8 @@ end
 ###############################################################################
 
 # TODO: add a `shrink` kwarg for shrinking length after lag/lead
-lag(tt::TimeTable{<:TimeGrid}, n::Int) = TimeTable(_ta(tt) + n, _vecs(tt))
-lead(tt::TimeTable{<:TimeGrid}, n::Int) = TimeTable(_ta(tt) -n, _vecs(tt))
+lag(tt::TimeTable{<:TimeGrid}, n::Int)  = TimeTable(_ta(tt) + n, _vecs(tt))
+lead(tt::TimeTable{<:TimeGrid}, n::Int) = TimeTable(_ta(tt) - n, _vecs(tt))
 
 # TODO: reindex ?
 
