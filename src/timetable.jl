@@ -70,11 +70,6 @@ Base.getindex(tt::TimeTable, i::Int, s::Symbol) =
     (@boundscheck checkbounds(tt, i); (s ≡ TimeTableTimeCol) ? _ta(tt)[i] : _vecs(tt)[s][i])
 Base.getindex(tt::TimeTable, t::TimeType, s::Symbol) = tt[time2idx(tt, t), s]
 
-# TODO: support time axis modification
-Base.setindex!(tt::TimeTable, v, i::Int, s::Symbol) =
-    (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i] = v)
-Base.setindex!(tt::TimeTable, v, t::TimeType, s::Symbol) = (tt[time2idx(tt, t), s] = v)
-
 for func ∈ [:findfirst, :findlast]
     @eval function Base.$func(f::Function, tt::TimeTable)
         i = $func(f, _ta(tt))
@@ -104,6 +99,18 @@ end
 #  Modification
 ###############################################################################
 
+# TODO: support time axis modification
+Base.setindex!(tt::TimeTable, v, i::Int, s::Symbol) =
+    (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i] = v)
+Base.setindex!(tt::TimeTable, v, t::TimeType, s::Symbol) = (tt[time2idx(tt, t), s] = v)
+
+function Base.resize!(tt::TimeTable, n::Int)
+    for v ∈ values(_vecs(tt))
+        resize!(v, n)
+    end
+    setfield!(tt, :n, n)
+    tt
+end
 
 
 ###############################################################################
