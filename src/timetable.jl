@@ -40,6 +40,8 @@ function TimeTable(ta::T; kw...) where T
     TimeTable(ta, vecs)
 end
 
+const TimeTableTimeCol = :time
+
 struct TimeTableRow{T,V}
     i::Int
     t::T
@@ -55,7 +57,8 @@ Base.lastindex(tt::TimeTable) = getfield(tt, :n)
 
 Base.checkindex(::Type{Bool}, tt::TimeTable, i::Int) = (1 ≤ i ≤ lastindex(tt))
 
-Base.getindex(tt::TimeTable, s::Symbol) = (s ≡ :time) ? getfield(tt, :ta) : getvec(tt, s)
+Base.getindex(tt::TimeTable, s::Symbol) =
+    (s ≡ TimeTableTimeCol) ? getfield(tt, :ta) : getvec(tt, s)
 
 function Base.getindex(tt::TimeTable, i::Int)
     @boundscheck checkbounds(tt, i)
@@ -64,8 +67,13 @@ end
 
 Base.getindex(tt::TimeTable, t::TimeType) = tt[time2idx(tt, t)]
 Base.getindex(tt::TimeTable, i::Int, s::Symbol) =
-    (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i])
+    (@boundscheck checkbounds(tt, i); (s ≡ TimeTableTimeCol) ? _ta(tt)[i] : _vecs(tt)[s][i])
 Base.getindex(tt::TimeTable, t::TimeType, s::Symbol) = tt[time2idx(tt, t), s]
+
+# TODO: support time axis modification
+Base.setindex!(tt::TimeTable, v, i::Int, s::Symbol) =
+    (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i] = v)
+Base.setindex!(tt::TimeTable, v, t::TimeType, s::Symbol) = (tt[time2idx(tt, t), s] = v)
 
 function Base.getindex(r::TimeTableRow, i::Int)
     (i == 1) ? r.i :
