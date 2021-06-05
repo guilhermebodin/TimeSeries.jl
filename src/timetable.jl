@@ -109,7 +109,7 @@ function Base.getindex(r::TimeTableRow, i::Int)
 end
 
 ###############################################################################
-#  Modification
+#  Value modification
 ###############################################################################
 
 function Base.setproperty!(tt::TimeTable, name::Symbol, x::AbstractVector)
@@ -153,6 +153,16 @@ function Base.push!(tt::TimeTable{<:TimeGrid}, x::NamedTuple)
     tt
 end
 
+
+###############################################################################
+#  Time axis modification
+###############################################################################
+
+# TODO: add a `shrink` kwarg for shrinking length after lag/lead
+lag(tt::TimeTable{<:TimeGrid}, n::Int) = TimeTable(_ta(tt) + n, _vecs(tt))
+lead(tt::TimeTable{<:TimeGrid}, n::Int) = TimeTable(_ta(tt) -n, _vecs(tt))
+
+# TODO: reindex ?
 
 ###############################################################################
 #  Private utils
