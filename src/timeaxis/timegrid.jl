@@ -288,6 +288,7 @@ end
 ###############################################################################
 
 Base.resize!(tg::TimeGrid{T,P,:finite}, n::Int) where {T,P} = (tg.n = n; tg)
+Base.resize!(tg::TimeGrid{T,P,:infinite}, n::Int) where {T,P} = tg
 #TODO: diff
 
 ###############################################################################
