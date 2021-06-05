@@ -63,21 +63,26 @@ Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
 #  Printing
 ###############################################################################
 
+Base.show(io::IO, tg::TimeGrid{T,P,:finite}) where {T,P} =
+    print(io, "$(tg.o) … $(tg[end]) / $(tg.p) ")
+
 function Base.show(io::IO, ::MIME{Symbol("text/plain")}, tg::TimeGrid{T,P,:finite}) where {T,P}
     summary(io, tg)
     println(io, ":")
     print(io, " $(tg.o)\n",
               "  ⋮\n",
               " $(tg[end])\n",
-              " period = $(tg.p)")
+              " / $(tg.p)")
 end
 
-Base.summary(io::IO, ata::AbstractTimeAxis) = print(io, "∞-element ", typeof(ata))
+Base.summary(io::IO, tg::TimeGrid{T,P,:infinite}) where {T,P} =
+    print(io, "∞-element ", typeof(tg))
+
 function Base.show(io::IO, ::MIME{Symbol("text/plain")}, tg::TimeGrid{T,P,:infinite}) where {T,P}
     summary(io, tg)
     println(io, ":")
     print(io, " $(tg.o) …\n",
-              " period = $(tg.p)")
+              " / $(tg.p)")
 end
 
 ###############################################################################

@@ -79,6 +79,8 @@ struct TimeArray{T,N,D<:TimeType,A<:AbstractArray{T,N}} <: AbstractTimeSeries{T}
             timestamp_r, reverse(values, dims = 1), replace_dupes!(colnames), meta)
 
         throw(ArgumentError("timestamps must be monotonic"))
+
+        # TODO: padded array design?
     end
 end
 
