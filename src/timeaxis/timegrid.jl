@@ -60,8 +60,33 @@ Base.size(tg::TimeGrid{T,P,:finite}) where{T,P}    = tg.n
 
 
 ###############################################################################
+#  Printing
+###############################################################################
+
+function Base.show(io::IO, ::MIME{Symbol("text/plain")}, tg::TimeGrid{T,P,:finite}) where {T,P}
+    summary(io, tg)
+    println(io, ":")
+    print(io, " $(tg.o)\n",
+              "  ⋮\n",
+              " $(tg[end])\n",
+              " period = $(tg.p)")
+end
+
+Base.summary(io::IO, ata::AbstractTimeAxis) = print(io, "∞-element ", typeof(ata))
+function Base.show(io::IO, ::MIME{Symbol("text/plain")}, tg::TimeGrid{T,P,:infinite}) where {T,P}
+    summary(io, tg)
+    println(io, ":")
+    print(io, " $(tg.o) …\n",
+              " period = $(tg.p)")
+end
+
+###############################################################################
 #  Indexing
 ###############################################################################
+
+# note that Base.size is undefined for this infinite case
+Base.lastindex(tg::TimeGrid{T,P,:infinite}) where {T,P} =
+    (typemax(DateTime) - tg.o) ÷ Millisecond(tg.p) + 1
 
 function Base.getindex(tg::TimeGrid, i::Real)  # FIXME: is rounding acceptable?
     @boundscheck checkbounds(tg, i)
@@ -91,7 +116,7 @@ Base.findlast(f::Function, tg::TimeGrid{T,P,:finite}) where {T,P} =
 Base.findlast(f::EqOrIsEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
     findnext(f, tg, 1)
 Base.findlast(f::LessOrLessEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
-    findprev(f, tg, typemax(Int))
+    findprev(f, tg, lastindex(tg))
 Base.findlast(f::GreaterOrGreaterEq, tg::TimeGrid{T,P,:infinite}) where {T,P} =
     throw(DomainError("infinite iterator. Please use `findprev` instead"))
 
