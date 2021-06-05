@@ -75,12 +75,35 @@ Base.setindex!(tt::TimeTable, v, i::Int, s::Symbol) =
     (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i] = v)
 Base.setindex!(tt::TimeTable, v, t::TimeType, s::Symbol) = (tt[time2idx(tt, t), s] = v)
 
+for func ∈ [:findfirst, :findlast]
+    @eval function Base.$func(f::Function, tt::TimeTable)
+        i = $func(f, _ta(tt))
+        isnothing(i) && return nothing
+        ifelse(i > getfield(tt, :n), nothing, i)
+    end
+
+    # TODO: handle case of infinte timegrid for findlast
+end
+
+for func ∈ [:findprev, :findnext]
+    @eval function Base.$func(f::Function, tt::TimeTable, j::Int)
+        i = $func(f, _ta(tt), j)
+        isnothing(i) && return nothing
+        ifelse(i > getfield(tt, :n), nothing, i)
+    end
+end
+
 function Base.getindex(r::TimeTableRow, i::Int)
     (i == 1) ? r.i :
     (i == 2) ? r.t :
     (i == 3) ? r.v :
     throw(BoundsError(r, i))
 end
+
+###############################################################################
+#  Modification
+###############################################################################
+
 
 
 ###############################################################################
