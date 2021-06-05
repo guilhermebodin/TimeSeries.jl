@@ -15,6 +15,7 @@ export resample
 #  include
 ###############################################################################
 
+include("./compat.jl")
 include("./abstract.jl")
 include("./nns.jl")
 include("./timegrid.jl")
