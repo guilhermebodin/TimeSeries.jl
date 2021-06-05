@@ -50,6 +50,19 @@ end
 
 
 ###############################################################################
+#  Iterator interfaces
+###############################################################################
+
+Base.size(tt::TimeTable) = (length(tt), length(keys(_vecs(tt))))
+Base.size(tt::TimeTable, dim) =
+    (dim == 1) ? length(tt) :
+    (dim == 2) ? length(keys(_vecs(tt))) :
+    1
+
+@inline Base.length(tt::TimeTable) = getfield(tt, :n)
+
+
+###############################################################################
 #  Indexing
 ###############################################################################
 
@@ -99,16 +112,44 @@ end
 #  Modification
 ###############################################################################
 
+function Base.setproperty!(tt::TimeTable, name::Symbol, x::AbstractVector)
+    (length(tt) != length(x)) && throw(DimensionMismatch("length unmatched"))
+    _vecs(tt)[name] = x
+end
+
 # TODO: support time axis modification
 Base.setindex!(tt::TimeTable, v, i::Int, s::Symbol) =
     (@boundscheck checkbounds(tt, i); _vecs(tt)[s][i] = v)
 Base.setindex!(tt::TimeTable, v, t::TimeType, s::Symbol) = (tt[time2idx(tt, t), s] = v)
 
-function Base.resize!(tt::TimeTable, n::Int)
+function Base.resize!(tt::TimeTable, n′::Int)
+    n = length(tt)
+    (n == n′) && return tt
+
     for v ∈ values(_vecs(tt))
-        resize!(v, n)
+        resize!(v, n′)
     end
+    setfield!(tt, :n, n′)
+    tt
+end
+
+function Base.push!(tt::TimeTable{<:TimeGrid}, x::NamedTuple)
+    d = _vecs(tt)
+    (size(tt, 2) == length(x)) || throw(DimensionMismatch("input length unmatched"))
+
+    ks = keys(d)
+    for k ∈ keys(x)
+        (k ∈ ks) || throw(ArgumentError("unknown column $k"))
+    end
+
+    for (k, v) ∈ d
+        push!(v, x[k])
+    end
+
+    n = length(tt) + 1
     setfield!(tt, :n, n)
+    resize!(_ta(tt), n)
+
     tt
 end
 
