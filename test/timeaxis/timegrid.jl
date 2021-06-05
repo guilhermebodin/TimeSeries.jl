@@ -381,7 +381,7 @@ end
         tg = TimeGrid(DateTime(2021, 1, 1), Minute(15))
         @info "foldr :: $(typeof(tg))"
 
-        @test_throws MethodError foldr(max, tg)
+        @test_throws BoundsError foldr(max, tg)
     end
 end
 

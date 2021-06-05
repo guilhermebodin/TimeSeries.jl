@@ -225,6 +225,12 @@ end
 #  Resampling
 ###############################################################################
 
+Base.reduce(f, tg::TimeGrid{T,P,:infinite}; kw...) where {T,P} =
+    throw(BoundsError("reduce", Inf))
+Base.foldl(f, tg::TimeGrid{T,P,:infinite}; kw...) where {T,P} =
+    throw(BoundsError("foldl", Inf))
+Base.foldr(f, tg::TimeGrid{T,P,:infinite}; kw...) where {T,P} =
+    throw(BoundsError("foldr", Inf))
 resample(tg::TimeGrid, i::Real) = TimeGrid(tg, p = Nanosecond(tg.p) * i)
 resample(tg::TimeGrid, p::Period) = TimeGrid(tg, p = p)
 
